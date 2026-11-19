@@ -4,10 +4,10 @@ pub type Result<T> = std::result::Result<T, KeyError>;
 
 #[derive(Debug, Error)]
 pub enum KeyError {
-    #[error("неверный мнемоник: {0}")]
+    #[error("Invalid mnemonic: {0}")]
     InvalidMnemonic(String),
 
-    #[error("ошибка хранилища: {0}")]
+    #[error("Keystore error: {0}")]
     Keystore(String),
 }
 
