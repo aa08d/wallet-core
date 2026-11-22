@@ -1,18 +1,18 @@
-use bip39::{Language, Mnemonic};
 use zeroize::Zeroizing;
 
-use crate::error::{KeyError, Result};
+use crate::error::Result;
+use crate::mnemonic::parse_mnemonic;
 
 pub fn to_seed(phrase: &str, passphrase: &str) -> Result<Zeroizing<[u8; 64]>> {
-    let mnemonic = Mnemonic::parse_in(Language::English, phrase)
-        .map_err(|e| KeyError::InvalidMnemonic(e.to_string()))?;
+    let mnemonic = parse_mnemonic(phrase)?;
 
     Ok(Zeroizing::new(mnemonic.to_seed(passphrase)))
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{KeyError, to_seed};
+    use super::to_seed;
+    use crate::KeyError;
 
     const PHRASE: &str = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
 
@@ -40,6 +40,16 @@ mod tests {
         ];
 
         assert_eq!(*to_seed(PHRASE, "").unwrap(), expected);
+    }
+
+    #[test]
+    fn derives_the_same_seed_from_normalized_input() {
+        let input = format!(" \n{}\t ", PHRASE.to_ascii_uppercase().replace(' ', "  \t"));
+
+        assert_eq!(
+            *to_seed(&input, "TREZOR").unwrap(),
+            *to_seed(PHRASE, "TREZOR").unwrap()
+        );
     }
 
     #[test]

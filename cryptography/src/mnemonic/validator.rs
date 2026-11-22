@@ -1,19 +1,9 @@
-use bip39::{Language, Mnemonic};
 use zeroize::Zeroizing;
 
-use crate::error::{KeyError, Result};
+use crate::error::Result;
 
 pub fn validate_mnemonic(phrase: &str) -> Result<Zeroizing<String>> {
-    let normalized = Zeroizing::new(
-        phrase
-            .split_whitespace()
-            .collect::<Vec<_>>()
-            .join(" ")
-            .to_lowercase(),
-    );
-    let mnemonic = Mnemonic::parse_in(Language::English, normalized.as_str())
-        .map_err(|error| KeyError::InvalidMnemonic(error.to_string()))?;
-
+    let mnemonic = super::parse_mnemonic(phrase)?;
     Ok(Zeroizing::new(mnemonic.to_string()))
 }
 
@@ -30,14 +20,6 @@ mod tests {
     #[test]
     fn accepts_a_valid_bip39_phrase() {
         let normalized = validate_mnemonic(VALID_PHRASE).unwrap();
-
-        assert_eq!(normalized.as_str(), VALID_PHRASE);
-    }
-
-    #[test]
-    fn normalizes_whitespace_and_case() {
-        let input = format!(" \n{}\t ", VALID_PHRASE.to_uppercase().replace(' ', "  \t"));
-        let normalized = validate_mnemonic(&input).unwrap();
 
         assert_eq!(normalized.as_str(), VALID_PHRASE);
     }
