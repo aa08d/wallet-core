@@ -1,6 +1,6 @@
 use ed25519_dalek::{Signer, SigningKey};
 
-use super::algorithms::slip10::{DerivationError, derive_ed25519};
+use super::{DerivationError, algorithms::slip10::derive_ed25519};
 
 pub struct SolanaAccount {
     key: SigningKey,

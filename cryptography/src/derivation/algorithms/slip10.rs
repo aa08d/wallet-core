@@ -1,20 +1,12 @@
 use hmac::{Hmac, Mac};
 use sha2::Sha512;
-use thiserror::Error;
 use zeroize::Zeroizing;
+
+use crate::derivation::DerivationError;
 
 type HmacSha512 = Hmac<Sha512>;
 
 const HARDENED_BIT: u32 = 1 << 31;
-
-#[derive(Debug, Error)]
-pub enum DerivationError {
-    #[error("SLIP-0010 seed must be 16 to 64 bytes, got {0}")]
-    InvalidSeedLength(usize),
-
-    #[error("child index must be below 2^31, got {0}")]
-    InvalidChildIndex(u32),
-}
 
 pub fn derive_ed25519(seed: &[u8], path: &[u32]) -> Result<Zeroizing<[u8; 32]>, DerivationError> {
     if !(16..=64).contains(&seed.len()) {
