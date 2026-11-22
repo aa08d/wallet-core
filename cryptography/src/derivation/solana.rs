@@ -1,4 +1,4 @@
-use ed25519_dalek::SigningKey;
+use ed25519_dalek::{Signer, SigningKey};
 
 use super::algorithms::slip10::{DerivationError, derive_ed25519};
 
@@ -25,12 +25,29 @@ impl SolanaAccount {
     pub fn address(&self) -> String {
         bs58::encode(self.pubkey()).into_string()
     }
+
+    pub fn sign_bytes(&self, message: &[u8]) -> [u8; 64] {
+        self.key.sign(message).to_bytes()
+    }
 }
 
 #[cfg(test)]
 mod tests {
+    use ed25519_dalek::{Signature, VerifyingKey};
+
     use super::SolanaAccount;
     use crate::seed::to_seed;
+
+    #[test]
+    fn signature_verifies_only_for_the_original_message() {
+        let account = SolanaAccount::derive(&[42; 64], 0).unwrap();
+        let key = VerifyingKey::from_bytes(&account.pubkey()).unwrap();
+        let message = b"Solana message";
+        let signature = Signature::from_bytes(&account.sign_bytes(message));
+
+        assert!(key.verify_strict(message, &signature).is_ok());
+        assert!(key.verify_strict(b"Solana Message", &signature).is_err());
+    }
 
     #[test]
     fn derives_the_first_solana_address_from_a_mnemonic() {
